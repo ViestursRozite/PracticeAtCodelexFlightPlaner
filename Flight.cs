@@ -22,55 +22,55 @@ namespace Attempt2
     {
         public Flight()
         {
-            from = new from();
-            to = new to();
-            carrier = "";
-            departureTime = DateTime.Now;
-            arrivalTime = DateTime.Now;
-            id = 0;
+            From = new From();
+            To = new To();
+            Carrier = "";
+            DepartureTime = DateTime.Now;
+            ArrivalTime = DateTime.Now;
+            Id = 0;
         }
-        public from from { get; set; }
-        public  to to { get; set; }
-        public string carrier { get; set; }
-        public  DateTime departureTime { get; set; }
-        public DateTime arrivalTime { get; set; }
-        public int id { get; set; }
+        public From From { get; set; }
+        public  To To { get; set; }
+        public string Carrier { get; set; }
+        public  DateTime DepartureTime { get; set; }
+        public DateTime ArrivalTime { get; set; }
+        public int Id { get; set; }
     }
 
-    public class to
+    public class To
     {
         //structure
         //  "to": {
         //    "country": "Sweden",
         //    "city": "Stockholm",
         //    "airport": "ARN"
-        public to()
+        public To()
         {
-            country = "";
-            city = "";
-            airport = "";
+            Country = "";
+            City = "";
+            Airport = "";
         }
-        public string country { get; set; }
-        public string city { get; set; }
-        public string airport { get; set; }
+        public string Country { get; set; }
+        public string City { get; set; }
+        public string Airport { get; set; }
 
     }
 
-    public class from
+    public class From
     {
         //structure
         //        "from": {
         //    "country": "Latvia",
         //    "city": "Riga",
         //    "airport": "RIX"
-        public from()
+        public From()
         {
-            country = "";
-            city = "";
-            airport = "";
+            Country = "";
+            City = "";
+            Airport = "";
         }
-        public string country { get; set; }
-        public string city { get; set; }
-        public string airport { get; set; }
+        public string Country { get; set; }
+        public string City { get; set; }
+        public string Airport { get; set; }
     }
 }

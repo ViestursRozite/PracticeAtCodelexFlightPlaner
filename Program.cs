@@ -49,7 +49,7 @@ namespace Attempt2
         public static bool AddFlightObjectToDatabase(int fligtID, Flight flight, SortedDictionary<int, Flight> position0)//add Flight object to database[0]
         {
             position0.Add(fligtID, flight);
-            flight.id = fligtID;
+            flight.Id = fligtID;
             Console.WriteLine($"Message added, ID[{fligtID}] to Database[0] proceeding...");
             return true;
         }
@@ -115,15 +115,15 @@ namespace Attempt2
         public static Flight FillFlightObject(string[] dataAsArr)//takes array of useful places and makes Flight object
         {
             Flight flight = new Flight();
-            flight.from.country = dataAsArr[0];
-            flight.from.city = dataAsArr[1];
-            flight.from.airport = dataAsArr[2];
-            flight.to.country = dataAsArr[3];
-            flight.to.city = dataAsArr[4];
-            flight.to.airport = dataAsArr[5];
-            flight.carrier = dataAsArr[6];
-            flight.departureTime = Convert.ToDateTime(dataAsArr[7]);
-            flight.arrivalTime = Convert.ToDateTime(dataAsArr[8]);
+            flight.From.Country = dataAsArr[0];
+            flight.From.City = dataAsArr[1];
+            flight.From.Airport = dataAsArr[2];
+            flight.To.Country = dataAsArr[3];
+            flight.To.City = dataAsArr[4];
+            flight.To.Airport = dataAsArr[5];
+            flight.Carrier = dataAsArr[6];
+            flight.DepartureTime = Convert.ToDateTime(dataAsArr[7]);
+            flight.ArrivalTime = Convert.ToDateTime(dataAsArr[8]);
 
             return flight;
         }
@@ -209,16 +209,16 @@ namespace Attempt2
 
         internal static string FlightToResponseBody(Flight flight)//convert Flight to Json string
         {
-            return $"{{ \"arrivalTime\": \"{flight.arrivalTime.ToString("yyyy-MM-dd HH:mm")}\"," +
-                $" \"carrier\": \"{flight.carrier}\"," +
-                $" \"departureTime\": \"{flight.departureTime.ToString("yyyy-MM-dd HH:mm")}\", " +
-                $"\"from\": {{ \"airport\": \"{flight.from.airport}\", " +
-                $"\"city\": \"{flight.from.city}\", " +
-                $"\"country\": \"{flight.from.country}\"}}, " +
-                $"\"id\": \"{flight.id}\", \"to\": {{ \"airport\": " +
-                $"\"{flight.to.airport}\", " +
-                $"\"city\": \"{flight.to.city}\", " +
-                $"\"country\": \"{flight.to.country}\"}} }}";
+            return $"{{ \"arrivalTime\": \"{flight.ArrivalTime.ToString("yyyy-MM-dd HH:mm")}\"," +
+                $" \"carrier\": \"{flight.Carrier}\"," +
+                $" \"departureTime\": \"{flight.DepartureTime.ToString("yyyy-MM-dd HH:mm")}\", " +
+                $"\"from\": {{ \"airport\": \"{flight.From.Airport}\", " +
+                $"\"city\": \"{flight.From.City}\", " +
+                $"\"country\": \"{flight.From.Country}\"}}, " +
+                $"\"id\": \"{flight.Id}\", \"to\": {{ \"airport\": " +
+                $"\"{flight.To.Airport}\", " +
+                $"\"city\": \"{flight.To.City}\", " +
+                $"\"country\": \"{flight.To.Country}\"}} }}";
         }
 
         internal static string[] ReturnIncomingSearch(string entityBody)//return aray of words that mae up Flight object fields and values
@@ -270,11 +270,11 @@ namespace Attempt2
                 var flight = KVP.Value;
                 
                 if(
-                    ((flight.from.airport.Equals(from)) ||//this flight contains from search query
-                    (flight.to.airport.Equals(from))) 
+                    ((flight.From.Airport.Equals(from)) ||//this flight contains from search query
+                    (flight.To.Airport.Equals(from))) 
                     &&
-                    ((flight.from.airport.Equals(to)) ||//this flight contains to search query
-                    (flight.to.airport.Equals(to)))
+                    ((flight.From.Airport.Equals(to)) ||//this flight contains to search query
+                    (flight.To.Airport.Equals(to)))
                    )
                 {
                     itemsFound++;
@@ -313,20 +313,20 @@ namespace Attempt2
             {
                 Flight flight = KVP.Value;
                 if (
-                    (flight.from.airport.ToLower().Contains(query.ToLower())) ||
-                    (flight.from.city.ToLower().Contains(query.ToLower())) ||
-                    (flight.from.country.ToLower().Contains(query.ToLower()))
+                    (flight.From.Airport.ToLower().Contains(query.ToLower())) ||
+                    (flight.From.City.ToLower().Contains(query.ToLower())) ||
+                    (flight.From.Country.ToLower().Contains(query.ToLower()))
                     )
                 {
-                    return $"[{{\"airport\": \"{flight.from.airport}\", \"city\": \"{flight.from.city}\", \"country\": \"{flight.from.country}\"}}]";
+                    return $"[{{\"airport\": \"{flight.From.Airport}\", \"city\": \"{flight.From.City}\", \"country\": \"{flight.From.Country}\"}}]";
                 }
                 else if (
-                    (flight.to.airport.ToLower().Contains(query.ToLower())) ||
-                    (flight.to.city.ToLower().Contains(query.ToLower())) ||
-                    (flight.to.country.ToLower().Contains(query.ToLower()))
+                    (flight.To.Airport.ToLower().Contains(query.ToLower())) ||
+                    (flight.To.City.ToLower().Contains(query.ToLower())) ||
+                    (flight.To.Country.ToLower().Contains(query.ToLower()))
                    )
                 {
-                    return $"[{{\"airport\": \"{flight.to.airport}\", \"city\": \"{flight.to.city}\", \"country\": \"{flight.to.country}\"}}]";
+                    return $"[{{\"airport\": \"{flight.To.Airport}\", \"city\": \"{flight.To.City}\", \"country\": \"{flight.To.Country}\"}}]";
                 }
             }
             return "failed at FindAirport()";
@@ -475,11 +475,11 @@ namespace Attempt2
                                     {
                                         flight = HelpingFunc.JsonToFlight(entityBody);//Make Flight object
 
-                                        if(flight.from.airport.ToUpper().Trim().Equals(flight.to.airport.ToUpper().Trim()))//Same airport in Flight object
+                                        if(flight.From.Airport.ToUpper().Trim().Equals(flight.To.Airport.ToUpper().Trim()))//Same airport in Flight object
                                         {
                                             resp.StatusCode = 400;//Bad request, an airport cannot exist in 2 places at once
                                         }
-                                        else if (flight.departureTime >= flight.arrivalTime )//If wierd flight times
+                                        else if (flight.DepartureTime >= flight.ArrivalTime )//If wierd flight times
                                         {
                                             resp.StatusCode = 400;//Bad request, no wierd times
                                         }
