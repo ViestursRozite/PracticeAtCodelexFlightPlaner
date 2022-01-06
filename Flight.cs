@@ -27,14 +27,13 @@ namespace Attempt2
             Carrier = "";
             DepartureTime = DateTime.Now;
             ArrivalTime = DateTime.Now;
-            Id = 0;
         }
         public From From { get; set; }
         public  To To { get; set; }
         public string Carrier { get; set; }
         public  DateTime DepartureTime { get; set; }
         public DateTime ArrivalTime { get; set; }
-        public int Id { get; set; }
+        public Int64 Id { get; set; }
     }
 
     public class To
