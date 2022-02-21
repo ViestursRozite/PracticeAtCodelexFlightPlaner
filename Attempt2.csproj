@@ -55,8 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="HttpServerInSQL.cs" />
-    <Compile Include="HttpServerInMemory.cs" />
-    <Compile Include="HelpingFunc.cs" />
+    <Compile Include="HelperFunctions.cs" />
     <Compile Include="SQLiteOperations.cs" />
     <Compile Include="Flight.cs" />
     <Compile Include="Program.cs" />

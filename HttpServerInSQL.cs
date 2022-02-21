@@ -4,6 +4,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace Attempt2
 {
     class HttpServerInSQL
@@ -16,9 +17,9 @@ namespace Attempt2
         {
             bool runServer = true;//Always true
 
-            //Creates new database and stores it`s connection obj
-            //Connection remains open while server runs, there is no close()
-            SQLiteConnection connectionToSQL = SQLiteOperations.StartSQL();
+            SQLiteOperations.DeleteFlightsDotSqlite();//remove previous sql database
+            SQLiteConnection connectionToSQL = SQLiteOperations.makeSQL();//makes flights.sqlite
+            SQLiteOperations.CreateTables(connectionToSQL);
 
             //Stores the flight object of this request
             Flight flight = new Flight();            
@@ -32,16 +33,16 @@ namespace Attempt2
                 HttpListenerRequest req = ctx.Request;
                 HttpListenerResponse resp = ctx.Response;
 
-                //Reformat stuff for ease of use
-                string myResponse = "";//Body of the response
-                string encodedPass = HelpingFunc.GetEncodedUserNPass(req);//Pull encoded pass and username
-                string adminNameNPass = HelpingFunc.DecodeStuff(encodedPass);// get id and password as string decoded
-                string entityBody = HelpingFunc.GiveBodyAsStringOrEmpty(req);//string with incoming message body
+                //Reformat for ease of use
+                string myResponse = "";//Body
+                string LoginEncoded64 = HelperFunctions.GetEncodedUserNPass(req.Headers);//Pull encoded pass and username
+                string adminNameNPass = HelperFunctions.Decode64(LoginEncoded64);// get id and password as string decoded
+                string entityBody = HelperFunctions.GiveBodyAsStringOrEmpty(req.InputStream, req.ContentEncoding);
 
                 // Write out the number of requests
                 Console.WriteLine();
                 Console.WriteLine("Request #:       {0}", ++requestCount);//Request count to console
-                HelpingFunc.WriteInputToConsole(req);//see what we are receving in console
+                HelperFunctions.HttpToConsole(req);//see what we are receving in console
                 Console.WriteLine("Incoming entity body : " + entityBody);//see what we are receving as incoming entity body
 
                 //Build a response 
@@ -49,19 +50,19 @@ namespace Attempt2
                 //outer ifs check method
                 //  followed by url 
                 //      and specific fields
-                if (HelpingFunc.MethodIsPOST(req))
+                if (req.HttpMethod.Equals("POST"))
                 {
-                    if (HelpingFunc.URLHasTestingApi(req))//→  /testing-api/
+                    if (req.Url.ToString().Contains(@"/testing-api/"))
                     {
-                        if (HelpingFunc.URLHasCear(req))//→  /clear
+                        if (req.Url.ToString().Contains(@"/clear"))
                         {
                             SQLiteOperations.ClearDatabase(connectionToSQL);//Delete command to sql
                             resp.StatusCode = 200;//say ok
                         }
                     }
-                    else if (HelpingFunc.URLContainsAPI(req))//→  /api/
+                    else if (req.Url.ToString().Contains("/api/"))//→  /api/
                     {
-                        if (HelpingFunc.URLHasFlights(req))//a search is beeing performed→  /flights/
+                        if (req.Url.ToString().Contains(@"/flights/"))//a search is beeing performed→  /flights/
                         {
                             if (req.HasEntityBody)//search has actual query
                             {
@@ -72,10 +73,10 @@ namespace Attempt2
                                 else
                                 {
                                     //Assuming a JS flight obect is entityBody
-                                    string[] incomingFields = HelpingFunc.ReturnIncomingSearch(entityBody);//array of all its fields
+                                    string[] incomingFields = HelperFunctions.ReturnIncomingSearch(entityBody);//array of all its fields
 
                                     //fromToDate = [flight.From, flight.to, flight.DepartureTime]
-                                    string[] fromToDate = HelpingFunc.ReturnSearchInfo(incomingFields);
+                                    string[] fromToDate = HelperFunctions.Return3FlightFieldsFromToAndDate(incomingFields);
 
                                     //searchIsValid = true, if .from and .to do not match
                                     bool searchIsValid;
@@ -96,41 +97,41 @@ namespace Attempt2
                         }
                     }
                 }
-                else if (HelpingFunc.MethodIsGET(req))
+                else if (req.HttpMethod.Equals("GET"))
                 {
-                    if (HelpingFunc.URLHasAdminAPI(req))//→   /admin-api/
+                    if (req.Url.ToString().Contains("/admin-api/"))//→   /admin-api/
                     {
-                        if (HelpingFunc.ThereIsID(req))//found id at the end of url
+                        if (HelperFunctions.ThereIsID(req))//found id at the end of url
                         {
-                            if (HelpingFunc.CheckPass(adminNameNPass))//if: Provided pasword correct
+                            if (HelperFunctions.CheckPass(adminNameNPass))//if: Provided pasword correct
                             {
                                 // no test cases present
                                 resp.StatusCode = 404;//doesnt exist
                             }
-                            else if (!HelpingFunc.CheckPass(adminNameNPass))//if: Password was incorrect
+                            else if (!HelperFunctions.CheckPass(adminNameNPass))//if: Password was incorrect
                             {
                                 resp.StatusCode = 401;//you are unauthorized
                             }
                         }
                     }
-                    else if (HelpingFunc.URLContainsAPI(req))//→  /api/
+                    else if (req.Url.ToString().Contains("/api/"))//→  /api/
                     {
                         //for api a search by data in url
                         if (!req.HasEntityBody)//should not have an obect attached
                         {
                             //a specific airport is beeing asked for
-                            if (HelpingFunc.URLIsFindAirport(req))//→ /airports?   
+                            if (req.Url.ToString().Contains("/airports?"))//→ /airports?
                             {
                                 //write response based on how many flights found
                                 myResponse = SQLiteOperations.FindAirport(req, connectionToSQL);
                                 resp.StatusCode = 200;
                             }
                             //asked for specific flight
-                            else if (HelpingFunc.URLHasFlights(req))//contains→   /flights/ 
+                            else if (req.Url.ToString().Contains(@"/flights/"))//contains→   /flights/ 
                             {
                                 // /flights/ ought to be followed by flight id
                                 //id = -1 if could not parse from url
-                                int id = HelpingFunc.GiveApiId(req);
+                                int id = HelperFunctions.GiveApiId(req);
 
                                 //query sql to see if flight with this id exists
                                 bool flightExists = SQLiteOperations.FlightWithThisIdExists(id, connectionToSQL);
@@ -140,7 +141,7 @@ namespace Attempt2
                                     //pull flight
                                     flight = SQLiteOperations.PullFlightFromDatabase(id, connectionToSQL);
                                     //convert to JS obj
-                                    myResponse = HelpingFunc.FlightToResponseBody(flight);
+                                    myResponse = HelperFunctions.FlightToResponseBody(flight);
                                     resp.StatusCode = 200;
                                 }
                                 else if (!flightExists)//flight with id does not exist
@@ -151,9 +152,9 @@ namespace Attempt2
                         }
                     }
                 }
-                else if (HelpingFunc.MethodIsPUT(req))
+                else if (req.HttpMethod.Equals("PUT"))
                 {
-                    if (HelpingFunc.URLHasAdminAPI(req))//→  /admin-api/
+                    if (req.Url.ToString().Contains("/admin-api/"))//Admin orders...
                     {
                         if (req.HasEntityBody)//an object is likely beeing added
                         {
@@ -174,7 +175,7 @@ namespace Attempt2
                                 else//this is not in the database
                                 {
                                     //Make Flight object
-                                    flight = HelpingFunc.JSObjToFlightObj(entityBody);
+                                    flight = HelperFunctions.JSObjToFlightObj(entityBody);
                                     
                                     //check if same airport
                                     if (flight.From.Airport.ToUpper().Trim().Equals(flight.To.Airport.ToUpper().Trim()))
@@ -199,7 +200,7 @@ namespace Attempt2
                                         if (flightIsAdded)
                                         {
                                             int flightID = SQLiteOperations.LastFlightAddedId(connectionToSQL);
-                                            myResponse = HelpingFunc.AddIdToResponseString(flightID, entityBody);
+                                            myResponse = HelperFunctions.AddIdToResponseString(flightID, entityBody);
                                             resp.StatusCode = 201; //sucsesfully added a flight
                                         }
                                         else
@@ -214,10 +215,10 @@ namespace Attempt2
                 }
 
                 //see what is going to be the response in console
-                HelpingFunc.WriteOutputToConsole(resp);
+                HelperFunctions.HttpToConsole(resp);
                 Console.WriteLine("Response body:" + myResponse);
 
-                // Write the response info
+                // Write response info
                 byte[] data = Encoding.UTF8.GetBytes(myResponse);
                 resp.ContentType = "text/html";
                 resp.ContentEncoding = Encoding.UTF8;

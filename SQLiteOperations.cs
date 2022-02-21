@@ -17,7 +17,7 @@ namespace Attempt2
         // Stores Fligts obj seperated into component fields
         private static string sqlFlights = "flights";
 
-        //Flight table column names
+        //Flight table column names:
         private static string f01Id = "id";//int
         private static string f02Carrier = "carrier";//string
         private static string f03DepartureTime = "departureTime";//string
@@ -30,32 +30,26 @@ namespace Attempt2
         private static string f10Airport_to = "airport_to";//string
 
         //Stores incoming typescript obj as single string but in base64
-        //used to quickly check if this has been added
-        private static string sqlUnprocessed = "unprocessed";
+        private static string sqlUnprocessed = "unprocessed";//used to check if obj in database
 
-        //Unprocessed table column names
+        //Unprocessed table column names:
         private static string fS1Id = "id";//SQL Foreign key Referencing f01Id
         private static string fS2JS64 = "javascript_but_base64";//typescript object stored as string encoded base 64, solves having to escape sql keywords 
-        //INTEGER in SQL, used to look up encoded typescript objects faster
+        private static string fS3Hash = "hashCode";//INTEGER in SQL, used to look up encoded typescript objects faster
         //will fail to work if data left in sql, but server gets a restart
-        private static string fS3Hash = "hashCode";
 
 
 
-        public static SQLiteConnection StartSQL()
+        public static void DeleteFlightsDotSqlite()//get rid of previous test run data
         {
-            //Create sql file and tables, leaves connection open
-            //returns connection obj
-
             if (File.Exists("Flights.sqlite"))
             {
-                File.Delete(Path.GetFullPath("Flights.sqlite"));//get rid of previous test run data
+                File.Delete(Path.GetFullPath("Flights.sqlite"));
             }
+        }
 
-            SQLiteConnection.CreateFile("Flights.sqlite");//make flights database
-            SQLiteConnection m_dbConnection = new SQLiteConnection("Data Source=Flights.sqlite;Version=3;");//create connection obj
-            m_dbConnection.Open();//use connection obj to connect
-
+        public static void CreateTables(SQLiteConnection m_dbConnection)
+        {
             string sqlFlightsCommand = $"CREATE TABLE {sqlFlights} " +
                 $"(" +
                 $"{f01Id} INTEGER NOT NULL PRIMARY KEY, " +
@@ -84,6 +78,16 @@ namespace Attempt2
 
             tableUnprocessed.ExecuteNonQuery();
             tableFlights.ExecuteNonQuery();
+        }
+
+        public static SQLiteConnection makeSQL()
+        {
+            //Create sql file and tables, leaves connection open
+            //returns connection obj
+
+            SQLiteConnection.CreateFile("Flights.sqlite");//make flights database
+            SQLiteConnection m_dbConnection = new SQLiteConnection("Data Source=Flights.sqlite;Version=3;");//create connection obj
+            m_dbConnection.Open();//use connection obj to connect
 
             return m_dbConnection;
         }
@@ -106,7 +110,7 @@ namespace Attempt2
             string from = fromToDate[0];
             string to = fromToDate[1];
 
-            if (fromToDate[0].Equals(fromToDate[1]))//exit early if from and to airports are the same
+            if (from.Equals(to))//exit early if from and to airports are the same
             {
                 searchIsValid = false;
                 result = $"{{ \"items\": [], \"page\": 0, \"totalItems\": 0}}";
@@ -136,7 +140,7 @@ namespace Attempt2
         {
             bool resultFound = false;
             //turn JS obj to base 64 string
-            string encoded = HelpingFunc.Encode64(entityBody);
+            string encoded = HelperFunctions.Encode64(entityBody);
             //hash encoded for SQL
             int hashCode = encoded.GetHashCode();
 
@@ -152,11 +156,11 @@ namespace Attempt2
             //unlikely but hash codes can be duplicates
             if (sqLiteResponse.HasRows)//sql returns something
             {
-                //likely to run only 1 time
+                //likely to contain only 1 row
                 while (sqLiteResponse.Read() && !resultFound)//we can read a new line from response, and havent found matching string
                 {
                     //compare returned and encoded
-                    resultFound = encoded.Equals(sqLiteResponse.GetString(1));//1 = fS2JS64
+                    resultFound = encoded.Equals(sqLiteResponse.GetString(1));//1 = fS2JS64 Compare 2 json flights in base 64
                 }
             }
 
@@ -165,7 +169,7 @@ namespace Attempt2
 
         public static bool AddFlightSQL(SQLiteConnection m_dbConnection, Flight flight, string entityBody)//Add usable Flight Obj and lokup table data
         {
-            string entityBody64 = HelpingFunc.Encode64(entityBody);//turn entity body to base 64 string
+            string entityBody64 = HelperFunctions.Encode64(entityBody);//turn entity body to base 64 string
             int hashCode = entityBody64.GetHashCode();//lets us query a number in SQL, instead of entityBody64
 
             SQLiteCommand sqlAddFlightCommand = new SQLiteCommand(m_dbConnection);
