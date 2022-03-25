@@ -1,9 +1,5 @@
 using NUnit.Framework;
 using static Attempt2.HelperFunctions;
-using System.Net;
-using Autofac.Extras.Moq;
-using Moq;
-using System.Net.Http;
 using System.Collections.Specialized;
 using Attempt2;
 using System;
@@ -15,7 +11,7 @@ namespace Tests
         [SetUp]
         public void Setup()
         {
-            //HttpListenerRequest req = new HttpListenerRequest();
+
         }
 
         [Test]
@@ -227,79 +223,5 @@ namespace Tests
             //Assert
             Assert.AreEqual(expected, actual);
         }
-
-        //[Test]
-        //[TestCase()]
-        //public void FillFlightObject()
-        //{
-        //    //Arrange
-        //    //Act
-        //    //Assert
-
-        //    Assert.Pass();
-        //}
-
-        //[Test]
-        //[TestCase()]
-        //public void FillFlightObject()
-        //{
-        //    //Arrange
-        //    //Act
-        //    //Assert
-
-        //    Assert.Pass();
-        //}
-
-        //[Test]
-        //[TestCase()]
-        //public void FillFlightObject()
-        //{
-        //    //Arrange
-        //    //Act
-        //    //Assert
-
-        //    Assert.Pass();
-        //}
-
-        //[Test]
-        //[TestCase()]
-        //public void FillFlightObject()
-        //{
-        //    //Arrange
-        //    //Act
-        //    //Assert
-
-        //    Assert.Pass();
-        //}
-
-        //[Test]
-        //[TestCase()]
-        //public void FillFlightObject()
-        //{
-        //    //Arrange
-        //    //Act
-        //    //Assert
-
-        //    Assert.Pass();
-        //}
-
-
-        //[Test]
-        //public void URLIsClearDatabase_ShouldDetectClearDatabase()
-        //{
-        //    //Arrange
-        //    //Http
-        //    //Act
-        //    //URLIsClearDatabase();
-        //    //Assert
-
-        //    Assert.Pass();
-
-
-        //}
-
-
-
-
     }
 }
